@@ -1,6 +1,38 @@
 # sosyal medya yonetim
 
-Bu modül **medya iletisim** kategorisi altında kamu kurumları için geliştirilecek açık kaynak **sosyal medya yonetim** projesidir.
+# Sosyal Medya Yönetim Sistemi
+
+Bu modül **medya iletişim** kategorisi altında kamu kurumları için geliştirilecek açık kaynak **sosyal medya yönetim** projesidir.
+
+## Proje Hakkında
+
+Bu proje, kamu kurumlarının dijital dönüşüm sürecinde ihtiyaç duyulan sosyal medya yönetim çözümünü açık kaynak olarak sunmayı hedeflemektedir.
+
+## ✅ Tamamlanan Özellikler
+
+- [x] Temel sistem mimarisi
+- [x] Kullanıcı yönetimi ve yetkilendirme (JWT)
+- [x] RESTful API geliştirme (Next.js API Routes)
+- [x] Güvenlik katmanları
+- [x] Veri yönetimi ve saklama (PostgreSQL)
+- [x] Full-stack Next.js uygulaması
+- [x] Vercel deploy desteği
+- [ ] Raporlama ve analitik
+- [ ] Mobil uygulama desteği
+- [ ] Sosyal medya entegrasyonları
+
+## 🛠️ Teknoloji Yığını
+
+- **Frontend & Backend:** Next.js 15.5.2 (React 19)
+- **API:** Next.js API Routes
+- **Veritabanı:** PostgreSQL (Vercel Postgres)
+- **Cache:** Upstash Redis
+- **Authentication:** JWT + bcrypt
+- **UI:** Tailwind CSS + Radix UI
+- **Deploy:** Vercel
+- **AI:** OpenAI API
+
+## 🚀 Kurulum
 
 ## Proje Hakkında
 
