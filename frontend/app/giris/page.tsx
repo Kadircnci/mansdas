@@ -14,29 +14,26 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? "/api";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      const body = new URLSearchParams();
-      body.append("username", username);
-      body.append("password", password);
-      const res = await fetch(`${apiBase}/auth/token`, {
+      const res = await fetch(`${apiBase}/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
       });
       if (!res.ok) {
-        const msg = await res.text();
-        throw new Error(msg || "Giriş başarısız");
+        const errorData = await res.json().catch(() => ({ detail: "Sunucu hatası" }));
+        throw new Error(errorData.detail || "Giriş başarısız");
       }
       const data = await res.json();
       localStorage.setItem("access_token", data.access_token);
       if (data.refresh_token) localStorage.setItem("refresh_token", data.refresh_token);
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Bir hata oluştu");
     } finally {
