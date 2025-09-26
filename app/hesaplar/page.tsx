@@ -75,15 +75,7 @@ export default function AccountsPage() {
 
   useEffect(() => {
     loadData();
-    
-    // OAuth callback handling
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-    
-    if (code && state) {
-      handleOAuthCallback(code, state);
-    }
+    checkCallbackResult();
   }, []);
 
   const loadData = async () => {
@@ -118,6 +110,16 @@ export default function AccountsPage() {
       if (accountsResponse.ok) {
         const accountsData = await accountsResponse.json();
         setAccounts(accountsData.accounts || []);
+      } else {
+        // API yoksa Next.js API route'unu dene
+        const fallbackResponse = await fetch('/api/accounts', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (fallbackResponse.ok) {
+          const data = await fallbackResponse.json();
+          setAccounts(data.success ? data.data || [] : []);
+        }
       }
       
       setLoading(false);
@@ -128,11 +130,66 @@ export default function AccountsPage() {
     }
   };
 
+  const checkCallbackResult = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const error = urlParams.get('error');
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+
+    // OAuth callback handling
+    if (code && state) {
+      handleOAuthCallback(code, state);
+      return;
+    }
+
+    // Legacy callback messages
+    if (success === 'twitter_connected') {
+      setMessage({type: 'success', text: 'Twitter hesabınız başarıyla bağlandı!'});
+    } else if (success === 'x_connected') {
+      setMessage({type: 'success', text: 'X hesabınız başarıyla bağlandı!'});
+    } else if (error) {
+      const errorMessages: {[key: string]: string} = {
+        'access_denied': 'Bağlantı erişimi reddedildi',
+        'invalid_callback': 'Geçersiz callback parametreleri',
+        'callback_failed': 'Bağlantı işlemi başarısız'
+      };
+      setMessage({type: 'error', text: errorMessages[error] || 'Bağlantı hatası oluştu'});
+    }
+
+    // URL'den parametreleri temizle
+    if (success || error || (code && state)) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  };
+
   const connectAccount = async (platform: string) => {
     try {
       setConnectingPlatform(platform);
       const token = localStorage.getItem('access_token');
       
+      // Twitter için özel OAuth flow
+      if (platform === 'twitter') {
+        const response = await fetch('/api/auth/twitter/oauth', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.oauth_url) {
+            window.location.href = data.oauth_url;
+            return;
+          }
+        } else {
+          throw new Error('Twitter OAuth URL alınamadı');
+        }
+      }
+      
+      // Diğer platformlar için genel OAuth flow
       const response = await fetch('http://localhost:8000/posts/connect/oauth-url', {
         method: 'POST',
         headers: {
@@ -147,8 +204,6 @@ export default function AccountsPage() {
       }
       
       const data: OAuthResponse = await response.json();
-      
-      // OAuth sayfasını yeni pencerede aç
       window.location.href = data.oauth_url;
       
     } catch (error) {
@@ -175,9 +230,6 @@ export default function AccountsPage() {
       
       if (result.success) {
         setMessage({ type: 'success', text: 'Hesap başarıyla bağlandı!' });
-        // URL'i temizle
-        window.history.replaceState({}, document.title, window.location.pathname);
-        // Hesapları yeniden yükle
         loadData();
       } else {
         setMessage({ type: 'error', text: result.error || 'Hesap bağlama başarısız' });
@@ -273,17 +325,25 @@ export default function AccountsPage() {
         </div>
 
         {message && (
-          <div className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
+          <div className={`mb-6 p-4 rounded-lg flex items-center justify-between gap-2 ${
             message.type === 'success' 
               ? 'bg-green-50 text-green-700 border border-green-200' 
               : 'bg-red-50 text-red-700 border border-red-200'
           }`}>
-            {message.type === 'success' ? (
-              <CheckCircle className="h-5 w-5" />
-            ) : (
-              <AlertCircle className="h-5 w-5" />
-            )}
-            {message.text}
+            <div className="flex items-center gap-2">
+              {message.type === 'success' ? (
+                <CheckCircle className="h-5 w-5" />
+              ) : (
+                <AlertCircle className="h-5 w-5" />
+              )}
+              {message.text}
+            </div>
+            <button 
+              onClick={() => setMessage(null)}
+              className="text-gray-400 hover:text-gray-600 ml-2"
+            >
+              ×
+            </button>
           </div>
         )}
 
@@ -385,16 +445,41 @@ export default function AccountsPage() {
           })}
         </div>
         
-        {/* Demo Mode Uyarısı */}
+        {/* Twitter API Callback Bilgileri */}
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-start gap-2">
             <div className="text-blue-600 mt-1">ℹ️</div>
             <div>
-              <h3 className="text-blue-800 font-medium mb-1">Demo Modu</h3>
-              <p className="text-blue-700 text-sm">
+              <h3 className="text-blue-800 font-medium mb-2">Twitter/X API Bağlantısı</h3>
+              <p className="text-blue-700 text-sm mb-3">
+                Twitter hesabınızı bağlamak için Twitter Developer Portal'da aşağıdaki 
+                Callback URL'leri eklemeniz gerekiyor:
+              </p>
+              <div className="bg-white p-3 rounded border text-xs font-mono">
+                <div className="mb-2">
+                  <strong>Local Development:</strong><br />
+                  http://localhost:3000/api/auth/callback/twitter<br />
+                  http://localhost:3000/api/auth/callback/x
+                </div>
+                <div>
+                  <strong>Production:</strong><br />
+                  https://mansdas.vercel.app/api/auth/callback/twitter<br />
+                  https://mansdas.vercel.app/api/auth/callback/x
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Demo Mode Uyarısı */}
+        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <div className="text-yellow-600 mt-1">⚠️</div>
+            <div>
+              <h3 className="text-yellow-800 font-medium mb-1">Demo Modu</h3>
+              <p className="text-yellow-700 text-sm">
                 Şu anda demo modunda çalışıyorsunuz. Gerçek sosyal medya hesapları bağlamak için 
-                platform API anahtarlarının konfigüre edilmesi gerekiyor. Demo hesaplarla test 
-                edebilirsiniz.
+                platform API anahtarlarının konfigüre edilmesi gerekiyor.
               </p>
             </div>
           </div>
