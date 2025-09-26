@@ -306,12 +306,26 @@ export default function DashboardPage() {
         }
       } else {
         const errorData = await res.json().catch(() => ({}));
-        const errorMessage = errorData.message || errorData.error || "AI içerik üretimi başarısız oldu";
+        let errorMessage = "AI içerik üretimi başarısız oldu";
+        
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          if (typeof errorData.error === 'object') {
+            errorMessage = errorData.error.message || JSON.stringify(errorData.error);
+          } else {
+            errorMessage = errorData.error;
+          }
+        } else if (errorData.data && errorData.data.message) {
+          errorMessage = errorData.data.message;
+        }
+        
         setError(`AI İçerik Hatası: ${errorMessage}`);
         console.error('Content generation failed:', errorData);
       }
     } catch (e: any) {
-      setError(`İçerik üretilirken hata oluştu: ${e.message}`);
+      const errorMessage = e.message || (typeof e === 'object' ? JSON.stringify(e) : String(e));
+      setError(`İçerik üretilirken hata oluştu: ${errorMessage}`);
       console.error('Content generation error:', e);
     } finally {
       setIsGenerating(false);

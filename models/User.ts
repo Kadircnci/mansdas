@@ -94,7 +94,6 @@ const UserSchema: Schema = new Schema({
 });
 
 // Index for better performance
-UserSchema.index({ username: 1 });
 UserSchema.index({ email: 1 });
 UserSchema.index({ role: 1 });
 UserSchema.index({ 'subscription.plan': 1 });

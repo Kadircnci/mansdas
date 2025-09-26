@@ -5,7 +5,7 @@ export interface IAnalytics extends Document {
   post_id?: mongoose.Types.ObjectId;
   account_id?: mongoose.Types.ObjectId;
   metric_type: 'post_created' | 'post_published' | 'post_failed' | 'account_connected' | 'login' | 'api_call';
-  platform?: 'instagram' | 'twitter' | 'facebook' | 'linkedin';
+  platform?: 'instagram' | 'twitter' | 'facebook' | 'linkedin' | 'genel';
   value?: number;
   metadata?: {
     error_message?: string;
@@ -39,7 +39,7 @@ const AnalyticsSchema: Schema = new Schema({
   },
   platform: {
     type: String,
-    enum: ['instagram', 'twitter', 'facebook', 'linkedin']
+    enum: ['instagram', 'twitter', 'facebook', 'linkedin', 'genel']
   },
   value: {
     type: Number,
