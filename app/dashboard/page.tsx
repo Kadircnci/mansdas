@@ -182,8 +182,56 @@ export default function DashboardPage() {
       
       if (!res.ok) throw new Error("Kayıt oluşturulamadı");
       
-      const item = await res.json() as Post;
+      const newPost = await res.json();
+      console.log('✅ Post created:', newPost);
+      
+      // Handle different API response formats
+      const item = newPost.success ? newPost.data : newPost;
       setPosts((p) => [item, ...p]);
+      
+      // Otomatik paylaşım için seçili hesap kontrol et
+      const selectedAccount = accounts.find(acc => acc.id === selectedAccounts[0]);
+      if (selectedAccount && item && item.id) {
+        console.log('🚀 Auto-publishing to:', selectedAccount.platform);
+        
+        try {
+          // Post'u otomatik olarak paylaş
+          const publishRes = await apiFetch(`/posts/${item.id}/publish`, {
+            method: "POST",
+          });
+          
+          if (publishRes.ok) {
+            const publishData = await publishRes.json();
+            console.log('✅ Post published successfully:', publishData);
+            
+            // Post listesini güncelle
+            setPosts(prev => prev.map(post => 
+              post.id === item.id 
+                ? { ...post, status: "published" }
+                : post
+            ));
+            
+            // Başarı mesajı göster
+            setError(null);
+            const successMessage = publishData.success 
+              ? `${selectedAccount.platform.charAt(0).toUpperCase() + selectedAccount.platform.slice(1)}'da paylaşıldı! 🎉`
+              : `Post ${selectedAccount.platform}'da paylaşıldı!`;
+              
+            // Geçici başarı mesajı (3 saniye sonra temizle)
+            setTimeout(() => {
+              console.log('✅ Auto-publish success:', successMessage);
+            }, 100);
+            
+          } else {
+            const errorData = await publishRes.json();
+            console.error('❌ Auto-publish failed:', errorData);
+            setError(`Post kaydedildi ancak ${selectedAccount.platform}'da paylaşılamadı: ${errorData.message || 'Bilinmeyen hata'}`);
+          }
+        } catch (publishError: any) {
+          console.error('❌ Auto-publish error:', publishError);
+          setError(`Post kaydedildi ancak ${selectedAccount.platform}'da paylaşılamadı: ${publishError.message}`);
+        }
+      }
       
       // Clear form
       setMode("manuel");
@@ -840,13 +888,13 @@ export default function DashboardPage() {
                     <div>
                       <label className="block text-sm font-medium mb-2 text-gray-700">Ton</label>
                       <select value={tone} onChange={(e) => setTone(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400">
-                        <option value="">Ton seçin</option>
-                        <option value="ciddi">Ciddi</option>
-                        <option value="kurumsal">Kurumsal</option>
-                        <option value="samimi">Samimi</option>
-                        <option value="eğlenceli">Eğlenceli</option>
-                        <option value="bilgilendirici">Bilgilendirici</option>
-                        <option value="motive edici">Motive Edici</option>
+                        <option key="main-tone-empty" value="">Ton seçin</option>
+                        <option key="main-tone-ciddi" value="ciddi">Ciddi</option>
+                        <option key="main-tone-kurumsal" value="kurumsal">Kurumsal</option>
+                        <option key="main-tone-samimi" value="samimi">Samimi</option>
+                        <option key="main-tone-eglenceli" value="eğlenceli">Eğlenceli</option>
+                        <option key="main-tone-bilgilendirici" value="bilgilendirici">Bilgilendirici</option>
+                        <option key="main-tone-motive" value="motive edici">Motive Edici</option>
                       </select>
                     </div>
                   </div>
@@ -890,13 +938,13 @@ export default function DashboardPage() {
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
                       disabled={isGenerating}
                     >
-                      <option value="">AI tonunu seçsin</option>
-                      <option value="ciddi">Ciddi</option>
-                      <option value="kurumsal">Kurumsal</option>
-                      <option value="samimi">Samimi</option>
-                      <option value="eğlenceli">Eğlenceli</option>
-                      <option value="bilgilendirici">Bilgilendirici</option>
-                      <option value="motive edici">Motive Edici</option>
+                      <option key="auto-tone-empty" value="">AI tonunu seçsin</option>
+                      <option key="auto-tone-ciddi" value="ciddi">Ciddi</option>
+                      <option key="auto-tone-kurumsal" value="kurumsal">Kurumsal</option>
+                      <option key="auto-tone-samimi" value="samimi">Samimi</option>
+                      <option key="auto-tone-eglenceli" value="eğlenceli">Eğlenceli</option>
+                      <option key="auto-tone-bilgilendirici" value="bilgilendirici">Bilgilendirici</option>
+                      <option key="auto-tone-motive" value="motive edici">Motive Edici</option>
                     </select>
                   </div>
 
@@ -1131,13 +1179,13 @@ export default function DashboardPage() {
                                 onChange={(e) => setEditTone(e.target.value)} 
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
                               >
-                                <option value="">Ton (opsiyonel)</option>
-                                <option value="ciddi">Ciddi</option>
-                                <option value="kurumsal">Kurumsal</option>
-                                <option value="samimi">Samimi</option>
-                                <option value="eğlenceli">Eğlenceli</option>
-                                <option value="bilgilendirici">Bilgilendirici</option>
-                                <option value="motive edici">Motive Edici</option>
+                                <option key="tone-empty" value="">Ton (opsiyonel)</option>
+                                <option key="tone-ciddi" value="ciddi">Ciddi</option>
+                                <option key="tone-kurumsal" value="kurumsal">Kurumsal</option>
+                                <option key="tone-samimi" value="samimi">Samimi</option>
+                                <option key="tone-eglenceli" value="eğlenceli">Eğlenceli</option>
+                                <option key="tone-bilgilendirici" value="bilgilendirici">Bilgilendirici</option>
+                                <option key="tone-motive" value="motive edici">Motive Edici</option>
                               </select>
                             </div>
                           </div>
