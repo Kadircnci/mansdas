@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import dbConnect from '../../../../../lib/mongodb';
+import { Account } from '../../../../../models';
+import jwt from 'jsonwebtoken';
 
 export async function GET(req: NextRequest) {
   try {
@@ -65,12 +68,92 @@ export async function GET(req: NextRequest) {
 
     const tokens = await tokenResponse.json();
     
-    // TODO: Burada kullanıcı bilgilerini al ve veritabanına kaydet
-    console.log('Twitter tokens received:', { access_token: '***' });
+    // Twitter kullanıcı bilgilerini al
+    const userResponse = await fetch('https://api.twitter.com/2/users/me', {
+      headers: {
+        'Authorization': `Bearer ${tokens.access_token}`
+      }
+    });
+
+    if (!userResponse.ok) {
+      console.error('Twitter user info fetch failed');
+      return NextResponse.redirect(
+        new URL('/hesaplar?error=user_info_failed', req.url)
+      );
+    }
+
+    const userData = await userResponse.json();
+    
+    // JWT token'dan kullanıcı ID'sini al (eğer authentication header varsa)
+    const authHeader = req.headers.get('authorization');
+    let userId = null;
+    
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const decoded = jwt.verify(token, process.env.SECRET_KEY!) as { userId: string };
+        userId = decoded.userId;
+      } catch (error) {
+        console.warn('JWT decode failed, checking cookies...');
+      }
+    }
+    
+    // Cookie'den de kontrol et
+    if (!userId) {
+      const cookies = req.headers.get('cookie') || '';
+      const accessTokenMatch = cookies.match(/access_token=([^;]+)/);
+      if (accessTokenMatch) {
+        try {
+          const decoded = jwt.verify(accessTokenMatch[1], process.env.SECRET_KEY!) as { userId: string };
+          userId = decoded.userId;
+        } catch (error) {
+          console.warn('Cookie JWT decode failed');
+        }
+      }
+    }
+
+    if (!userId) {
+      return NextResponse.redirect(
+        new URL('/hesaplar?error=authentication_required', req.url)
+      );
+    }
+
+    // Veritabanına Twitter hesabını kaydet
+    await dbConnect();
+    
+    const twitterAccount = await Account.findOneAndUpdate(
+      {
+        owner_id: userId,
+        platform: 'twitter',
+        external_id: userData.data.id
+      },
+      {
+        owner_id: userId,
+        platform: 'twitter',
+        external_id: userData.data.id,
+        name: userData.data.name,
+        username: userData.data.username,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        expires_at: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : undefined,
+        is_active: true,
+        last_sync: new Date()
+      },
+      { 
+        upsert: true, 
+        new: true 
+      }
+    );
+
+    console.log('Twitter account saved:', {
+      id: twitterAccount._id,
+      username: userData.data.username,
+      name: userData.data.name
+    });
 
     // Başarılı bağlantı için hesaplar sayfasına yönlendir
     return NextResponse.redirect(
-      new URL('/hesaplar?success=twitter_connected', req.url)
+      new URL('/hesaplar?success=twitter_connected&username=' + userData.data.username, req.url)
     );
 
   } catch (error) {
