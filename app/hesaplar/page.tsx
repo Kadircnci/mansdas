@@ -19,6 +19,7 @@ interface Account {
   id: number;
   platform: string;
   name: string;
+  username?: string;
   external_id: string;
   is_active: boolean;
 }
@@ -166,6 +167,21 @@ export default function AccountsPage() {
   const connectAccount = async (platform: string) => {
     try {
       setConnectingPlatform(platform);
+      
+      // Önce bu platform için zaten bağlı hesap olup olmadığını kontrol et
+      const existingAccount = accounts.find(acc => 
+        acc.platform === platform && acc.is_active
+      );
+      
+      if (existingAccount) {
+        setMessage({ 
+          type: 'error', 
+          text: `${platform.charAt(0).toUpperCase() + platform.slice(1)} hesabı zaten bağlı: @${existingAccount.username || existingAccount.name}` 
+        });
+        setConnectingPlatform(null);
+        return;
+      }
+      
       const token = localStorage.getItem('access_token');
       
       // Twitter için özel OAuth flow
@@ -185,7 +201,8 @@ export default function AccountsPage() {
             return;
           }
         } else {
-          throw new Error('Twitter OAuth URL alınamadı');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Twitter OAuth URL alınamadı');
         }
       }
       

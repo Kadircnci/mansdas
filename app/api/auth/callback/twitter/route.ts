@@ -84,37 +84,48 @@ export async function GET(req: NextRequest) {
 
     const userData = await userResponse.json();
     
-    // JWT token'dan kullanıcı ID'sini al (eğer authentication header varsa)
-    const authHeader = req.headers.get('authorization');
+    // JWT token'dan kullanıcı ID'sini al - Cookie'den kontrol et
+    const cookies = req.headers.get('cookie') || '';
     let userId = null;
     
-    if (authHeader?.startsWith('Bearer ')) {
+    // Try access_token from cookie
+    const accessTokenMatch = cookies.match(/access_token=([^;]+)/);
+    if (accessTokenMatch) {
       try {
-        const token = authHeader.substring(7);
-        const decoded = jwt.verify(token, process.env.SECRET_KEY!) as { userId: string };
+        const decoded = jwt.verify(accessTokenMatch[1], process.env.SECRET_KEY!) as { userId: string };
         userId = decoded.userId;
       } catch (error) {
-        console.warn('JWT decode failed, checking cookies...');
+        console.warn('Cookie JWT decode failed:', error);
       }
     }
     
-    // Cookie'den de kontrol et
+    // Try session_token from cookie as fallback
     if (!userId) {
-      const cookies = req.headers.get('cookie') || '';
-      const accessTokenMatch = cookies.match(/access_token=([^;]+)/);
-      if (accessTokenMatch) {
+      const sessionTokenMatch = cookies.match(/session_token=([^;]+)/);
+      if (sessionTokenMatch) {
         try {
-          const decoded = jwt.verify(accessTokenMatch[1], process.env.SECRET_KEY!) as { userId: string };
+          const decoded = jwt.verify(sessionTokenMatch[1], process.env.SECRET_KEY!) as { userId: string };
           userId = decoded.userId;
         } catch (error) {
-          console.warn('Cookie JWT decode failed');
+          console.warn('Session JWT decode failed:', error);
         }
+      }
+    }
+    
+    // Try URL parameter as last resort (if passed via state)
+    if (!userId && state) {
+      try {
+        const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+        userId = stateData.userId;
+      } catch (error) {
+        // State might just be a random string, that's ok
       }
     }
 
     if (!userId) {
+      console.error('No user authentication found in cookies or state');
       return NextResponse.redirect(
-        new URL('/hesaplar?error=authentication_required', req.url)
+        new URL('/hesaplar?error=authentication_required&message=' + encodeURIComponent('Lütfen önce giriş yapın'), req.url)
       );
     }
 

@@ -113,7 +113,12 @@ export default function DashboardPage() {
         console.log('📊 Accounts response received:', accountsResponse);
         
         // Handle new API response format
-        const accountsData = accountsResponse.data || accountsResponse;
+        let accountsData = accountsResponse.data || accountsResponse;
+        
+        // API response might have success wrapper
+        if (accountsResponse.success && accountsResponse.data) {
+          accountsData = accountsResponse.data;
+        }
         
         if (Array.isArray(accountsData)) {
           setAccounts(accountsData);
@@ -573,7 +578,8 @@ export default function DashboardPage() {
           <CardContent>
             {!Array.isArray(accounts) || accounts.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <p>Henüz sosyal medya hesabı bağlanmamış.</p>
+                <p className="text-lg mb-2">Henüz sosyal medya hesabı bağlanmamış.</p>
+                <p className="text-sm">Hesap bağlamak için <a href="/hesaplar" className="text-blue-500 hover:underline">Hesaplar</a> sayfasını ziyaret edin.</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -595,12 +601,14 @@ export default function DashboardPage() {
                          account.platform === 'facebook' ? '📘' :
                          account.platform === 'linkedin' ? '💼' : '📱'}
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 capitalize">
                           {account.platform}
                         </h3>
-                        <p className="text-sm text-gray-600">
-                          {account.name || account.external_id}
+                        <p className="text-sm text-gray-600 truncate">
+                          {(account as any).username ? `@${(account as any).username}` : 
+                           account.name || 
+                           `ID: ${account.external_id.length > 10 ? account.external_id.substring(0, 10) + '...' : account.external_id}`}
                         </p>
                       </div>
                     </div>
@@ -608,17 +616,29 @@ export default function DashboardPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-gray-500">Durum</span>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                          Aktif
+                        <Badge variant="secondary" className={`text-xs ${
+                          (account as any).is_active !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {(account as any).is_active !== false ? 'Bağlı ✓' : 'Bağlantı Kesildi'}
                         </Badge>
                       </div>
                       
+                      {account.name && (account as any).username && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-gray-500">Ad</span>
+                          <span className="text-xs text-gray-700 truncate max-w-[120px]">
+                            {account.name}
+                          </span>
+                        </div>
+                      )}
+                      
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-500">ID</span>
-                        <span className="text-xs font-mono text-gray-700">
-                          {account.external_id.length > 15 
-                            ? `${account.external_id.substring(0, 12)}...` 
-                            : account.external_id}
+                        <span className="text-xs text-gray-500">Bağlandı</span>
+                        <span className="text-xs text-gray-700">
+                          {(account as any).createdAt 
+                            ? new Date((account as any).createdAt).toLocaleDateString('tr-TR')
+                            : 'Bilinmiyor'
+                          }
                         </span>
                       </div>
                       
