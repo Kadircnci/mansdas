@@ -1,90 +1,36 @@
-# sosyal medya yonetim
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-# Sosyal Medya Yönetim Sistemi
+## Getting Started
 
-Bu modül **medya iletişim** kategorisi altında kamu kurumları için geliştirilecek açık kaynak **sosyal medya yönetim** projesidir.
-
-## Proje Hakkında
-
-Bu proje, kamu kurumlarının dijital dönüşüm sürecinde ihtiyaç duyulan sosyal medya yönetim çözümünü açık kaynak olarak sunmayı hedeflemektedir.
-
-## ✅ Tamamlanan Özellikler
-
-- [x] Temel sistem mimarisi
-- [x] Kullanıcı yönetimi ve yetkilendirme (JWT)
-- [x] RESTful API geliştirme (Next.js API Routes)
-- [x] Güvenlik katmanları
-- [x] Veri yönetimi ve saklama (PostgreSQL)
-- [x] Full-stack Next.js uygulaması
-- [x] Vercel deploy desteği
-- [ ] Raporlama ve analitik
-- [ ] Mobil uygulama desteği
-- [ ] Sosyal medya entegrasyonları
-
-## 🛠️ Teknoloji Yığını
-
-- **Frontend & Backend:** Next.js 15.5.2 (React 19)
-- **API:** Next.js API Routes
-- **Veritabanı:** PostgreSQL (Vercel Postgres)
-- **Cache:** Upstash Redis
-- **Authentication:** JWT + bcrypt
-- **UI:** Tailwind CSS + Radix UI
-- **Deploy:** Vercel
-- **AI:** OpenAI API
-
-## 🚀 Kurulum
-
-## Proje Hakkında
-
-Bu proje, kamu kurumlarının dijital dönüşüm sürecinde ihtiyaç duyulan sosyal medya yonetim çözümünü açık kaynak olarak sunmayı hedeflemektedir.
-
-
-## Özellikler
-
-- [ ] Temel sistem mimarisi
-- [ ] Kullanıcı yönetimi ve yetkilendirme
-- [ ] RESTful API geliştirme
-- [ ] Güvenlik katmanları
-- [ ] Veri yönetimi ve saklama
-- [ ] Raporlama ve analitik
-- [ ] Mobil uygulama desteği
-- [ ] Entegrasyon API'leri
-
-## Teknoloji Yığını
-
-- **Backend:** (Belirlenecek - Java/Spring, Python/Django, Node.js vb.)
-- **Frontend:** (Belirlenecek - React, Vue.js, Angular vb.)
-- **Veritabanı:** (Belirlenecek - PostgreSQL, MySQL, MongoDB vb.)
-- **Cache:** Redis
-- **Message Queue:** RabbitMQ / Apache Kafka
-
-
-## Kurulum
+First, run the development server:
 
 ```bash
-# Proje henüz geliştirme aşamasındadır
-# Kurulum adımları eklenecek
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## Kullanım
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```bash
-# Kullanım örnekleri eklenecek
-```
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## API Dokümantasyonu
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-API dokümantasyonu için [/docs](./docs) klasörüne bakınız.
+## Learn More
 
-## Katkıda Bulunma
+To learn more about Next.js, take a look at the following resources:
 
-Projeye katkıda bulunmak için lütfen [CONTRIBUTING.md](../CONTRIBUTING.md) dosyasını inceleyin.
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## Lisans
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-Bu proje açık kaynak lisansı altında yayınlanacaktır. Detaylar için [LICENSE](../LICENSE) dosyasına bakınız.
+## Deploy on Vercel
 
-## İletişim
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Proje hakkında sorularınız için issue açabilir veya proje ekibiyle iletişime geçebilirsiniz.
-# mansdas
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
